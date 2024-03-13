@@ -1,3 +1,4 @@
+import time
 import RPi.GPIO as GPIO
 import os
 import requests
@@ -17,43 +18,67 @@ def printTemperature():
 def readFSRSensor():
     return GPIO.input(17)
 
-def readRelay():
-    return GPIO.input(18)
+def readRelay(): #su dung thuong dong => luon cap dien cho nam cham. Cap dien relay => ngung cap dien nam cham
+    #Relay (0) => Magnetic (1)
+    #Relay (1) => Magnetic (0)
+    return GPIO.input(18) 
 
-def controlLED():
-   try:
-        while True:
-            object_state = readFSRSensor()
-            door_state = readRelay()
-            user_input = input("Turn LED On or Off with 1 or 0 (Ctrl-C to exit): ")
+# def controlLED():
+#    try:
+#         while True:
+#             object_state = readFSRSensor()
+#             door_state = readRelay()
+#             user_input = input("Turn LED On or Off with 1 or 0 (Ctrl-C to exit): ")
 
-            if user_input == "1" and door_state == GPIO.LOW and object_state == GPIO.LOW:
-                GPIO.output(18, GPIO.HIGH) #off the magnetic
-                print("Door is open! Sending...")
-                while object_state == GPIO.LOW: 
-                    time.sleep(1)
-                else:
-                    GPIO.output(18, GPIO.LOW)
+#             if user_input == "1" and door_state == GPIO.LOW and object_state == GPIO.LOW:
+#                 GPIO.output(18, GPIO.HIGH) #Relay (1) => Magnetic (0)
+#                 print("Door is open! Sending...")
+#                 while object_state == GPIO.LOW: #Wait to put the object
+#                     time.sleep(1)
+#                 else:
+#                     GPIO.output(18, GPIO.LOW) #Turn Magnetic on when Have OBJECT and close the door by hand
                 
-            else:
-                GPIO.output(18, GPIO.LOW)
-                print("Door is open! Receiving...")
-                while object_state == GPIO.HIGH: 
-                    time.sleep(1)
-                else:
-                    GPIO.output(18, GPIO.LOW)
+#             else:
+#                 GPIO.output(18, GPIO.HIGH) #Open the door
+#                 print("Door is open! Receiving...")
+#                 while object_state == GPIO.HIGH: #Wait to take the object
+#                     time.sleep(1)
+#                 else:
+#                     GPIO.output(18, GPIO.LOW)
 
-            time.sleep(1)  # Add a delay to avoid excessive readings
-    except KeyboardInterrupt:
-        GPIO.cleanup()
-        print("")
+#             time.sleep(1)  # Add a delay to avoid excessive readings
+#     except KeyboardInterrupt:
+#         GPIO.cleanup()
+#         print("")
+
+def lockerChecking_Act(http_method):
+    object_state = readFSRSensor()
+    door_state = readRelay()
+    #Check if the locker is avaiable for sending
+    if http_method == "GET" and door_state == GPIO.LOW and object_state == GPIO.LOW: #SENDING PACKAGE/GUI HANG + MAGNETIC (ON) + NO OBJECT
+        GPIO.output(18, GPIO.HIGH) #Relay (1) => Magnetic (0)
+        print("Door is open! Sending the package...")
+        while object_state == GPIO.LOW: #Wait to put the object
+            time.sleep(1)
+        else:
+            GPIO.output(18, GPIO.LOW) #Turn Magnetic on when Have OBJECT and close the door by hand
+
+    elif http_method == "PUT" and door_state == GPIO.LOW and object_state == GPIO.HIGH:
+        GPIO.output(18, GPIO.HIGH) #Open the door
+        print("Door is open! Receiving the package...")
+        while object_state == GPIO.HIGH: #Wait to take the object
+            time.sleep(1)
+        else:
+            GPIO.output(18, GPIO.LOW) ##Turn Magnetic on when Have OBJECT and close the door by hand
+
 
 def print_http_method(api_url):
     try:
         response = requests.get(api_url)
         http_method = response.request.method
         if http_method == "GET":
-            print("Request Method is GET")
+
+print("Request Method is GET")
         elif http_method == "PUT":
             print("Request Method is PUT")
         # Add more conditions as needed for other HTTP methods
@@ -61,6 +86,10 @@ def print_http_method(api_url):
             print("Unknown Request Method")
     except Exception as e:
         print(f"An error occurred: {e}")
+
+def getHTTP_method():
+    response = requests.get(api_url)
+    http_method = response.request.method
 
 def main():
     # Specify the API URL
@@ -79,4 +108,4 @@ if __name__ == "__main__":
     main()
     setupGPIO()
     printTemperature()
-    controlLED()
+    lockerChecking_Act(getHTTP_method())
