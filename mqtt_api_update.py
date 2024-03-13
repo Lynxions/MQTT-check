@@ -77,8 +77,7 @@ def print_http_method(api_url):
         response = requests.get(api_url)
         http_method = response.request.method
         if http_method == "GET":
-
-print("Request Method is GET")
+            print("Request Method is GET")
         elif http_method == "PUT":
             print("Request Method is PUT")
         # Add more conditions as needed for other HTTP methods
@@ -87,11 +86,14 @@ print("Request Method is GET")
     except Exception as e:
         print(f"An error occurred: {e}")
 
-def getHTTP_method():
+def getHTTP_method(api_url):
     response = requests.get(api_url)
     http_method = response.request.method
+    return http_method
 
 def main():
+    setupGPIO()
+    printTemperature()
     # Specify the API URL
     api_url = 'https://api.captechvn.com/api/v1/locker'
     
@@ -104,8 +106,8 @@ def main():
     # Print the array result
     print("URL parts:", url_parts)
 
+    lockerChecking_Act(getHTTP_method(api_url))
+
+
 if __name__ == "__main__":
     main()
-    setupGPIO()
-    printTemperature()
-    lockerChecking_Act(getHTTP_method())
