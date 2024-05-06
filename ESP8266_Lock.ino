@@ -2,26 +2,23 @@
 #include <PubSubClient.h>
 
 // Replace the SSID/Password details as per your wifi router
-const char* ssid = "FP";
-const char* password = "QT73669503PS";
+const char* ssid = "";
+const char* password = "";
 
 // Change the variable to your Raspberry Pi IP address, so it connects to your MQTT broker
 // Replace your MQTT Broker IP address here:
-const char* mqtt_server = "192.168.1.27";
+const char* mqtt_server = "";
 
 // Initializes the espClient
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 #define ledPin 2
-#define FORCE_SENSOR_PIN 16 // ESP32 pin GPIO16 (D0): the FSR and 10K pulldown are connected to D0
+#define LOCK_PIN 16 // ESP32 pin GPIO16 (D0): for on and off switch
 #define LOAD_PIN 5 
 
-int fsrAnalogPin = 0;
 int ledTestPin = 8;
 int relayPin = 7;
-int fsrReading;
-int fsrPercent;
 
 void blink_led(unsigned int times, unsigned int duration){
     for (int i = 0; i < times; i++) {
@@ -44,7 +41,7 @@ void setup_wifi(){
         blink_led(2,200); //blink LED twice (for 200ms ON time) to indicate that wifi not connected
         delay(1000); //
         Serial.print(".");
-        c=c+1;
+        c++;
         if(c>10){
             ESP.restart(); //restart ESP after 10 seconds
         }        
@@ -162,22 +159,5 @@ void loop(){
       client.publish(b, a, 0);
     }
     
-
-    // fsrReading = analogRead(fsrAnalogPin);
-    // Serial.print("Analog reading = ");
-    // Serial.println(fsrReading);
-    // String messageTemp;
     delay(2000);
-
-    // // char LEDbrightness = map(fsrReading, 0, 1023, 100, 0);
-    // //     messageTemp = '0',
-    // //     client.publish(
-    // //         topic='//',
-    // //         payload=messageTemp.encode('utf-8'),
-    // //         qos = 0,
-    // //     );
-    //char* a = "h";
-    //char* b = "rpi/broadcast";
-    //client.publish(b, a, 0);
-
 }
