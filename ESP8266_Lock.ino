@@ -1,13 +1,18 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
+//#include <Ticker.h>
 
-// Replace the SSID/Password details as per your wifi router
+// const char* ssid = "IU STAFF";
+// const char* password = "8888888888";
+
 const char* ssid = "International University";
 const char* password = "";
 
-// Change the variable to your Raspberry Pi IP address, so it connects to your MQTT broker
-// Replace your MQTT Broker IP address here:
-const char* mqtt_server = "10.238.55.140";
+//const char* mqtt_server = "broker.hivemq.com";
+
+const char* mqtt_server = "10.238.55.140"; //IU
+
+//const char* mqtt_server = "10.8.99.120"; //IU STAFF
 
 // Initializes the espClient
 WiFiClient espClient;
@@ -15,10 +20,23 @@ PubSubClient client(espClient);
 
 #define ledPin 2
 
+// Ticker lockStateTick;
+// Ticker lockStateTick2;
+
+unsigned long prevMilli = 0; // store the last time lockstate was updated
+const long interval = 5000; // interval of 5s
+
 const byte lock_pin = 5; //ESP32 pin GPIO5 (D1)
 const byte control_pin = 16; //ESP32 pin GPIO16 (D0)
+//const byte button = 0; //ESP32 pin GPIO0 (D3)
+const byte lock_pin2 = 14; //ESP32 pin GPIO3 (D5)
+
+int lock_state = LOW;    // the current state of Lock
+//int button_state;       // the current state of button
+int last_button_state;  // the previous state of button
 
 bool lockState = false;
+bool lockState2 = false;
 
 void blink_led(unsigned int times, unsigned int duration){
     for (int i = 0; i < times; i++) {
@@ -42,7 +60,7 @@ void setup_wifi(){
         delay(100); //
         Serial.print(".");
         c=c+1;
-        if(c>100){
+        if(c>50){
             ESP.restart(); //restart ESP after 10 seconds
         }        
     }
@@ -71,8 +89,8 @@ void connect_mqttServer(){
             //attempt successful
             Serial.println("connected");
             // Subscribe to topics here
-            client.subscribe("rpi/cell1");
-            client.subscribe("rpi/broadcast");
+            client.subscribe("rpi/locker1");
+            client.subscribe("rpi/locker2");
             //client.subscribe("rpi/xyz"); //subscribe more topics here
         } 
         else {
@@ -99,16 +117,42 @@ void callback(char* topic, byte* message, unsigned int length) {
         messageTemp += (char)message[i];
     }
 
-    if (String(topic) == "rpi/broadcast") {
+    if (String(topic) == "rpi/locker1") {
       if (messageTemp == "on" && !lockState) {
         digitalWrite(lock_pin, HIGH);
         lockState = true;
-        Serial.print("Lock is open");
-      }
-      if (messageTemp == "off" && lockState) {
+        Serial.print("Lock 1 is open");
+
+        Serial.println();
+        delay(5000);
         digitalWrite(lock_pin, LOW);
         lockState = false;
-        Serial.print("Lock is closed");
+        Serial.print("Lock 1 is closed after 5 seconds");
+      }
+      if (messageTemp == "off") {
+        digitalWrite(lock_pin, LOW);
+        lockState = false;
+        Serial.print("Lock 1 is closed");
+      }
+    }
+    Serial.println();
+
+    if (String(topic) == "rpi/locker2") {
+      if (messageTemp == "on" && !lockState2) {
+        digitalWrite(lock_pin2, HIGH);
+        lockState2 = true;
+        Serial.print("Lock 2 is open");
+
+        Serial.println();
+        delay(5000);
+        digitalWrite(lock_pin2, LOW);
+        lockState2 = false;
+        Serial.print("Lock 2 is closed after 5 seconds");
+      }
+      if (messageTemp == "off") {
+        digitalWrite(lock_pin2, LOW);
+        lockState2 = false;
+        Serial.print("Lock 2 is closed");
       }
     }
     Serial.println();
@@ -120,13 +164,16 @@ void setup(){
     
     pinMode(control_pin, INPUT);
     pinMode(lock_pin, OUTPUT);
+//    pinMode(button, INPUT_PULLUP);
+    pinMode(lock_pin2, OUTPUT);
+
+//    button_state = digitalRead(button);
 
     setup_wifi();
     client.setServer(mqtt_server,1883);//1883 is the default port for MQTT server
     client.setCallback(callback);  
 
 }
-
 
 void loop(){
     if (!client.connected()){
@@ -137,20 +184,43 @@ void loop(){
 
     //function to publish
 
+    unsigned long currentMilli = millis();
+
     int analogReading = analogRead(control_pin);
+    
+    // button
+    // last_button_state = button_state;
+    // button_state = digitalRead(button);
+
+    
+    // if(last_button_state == HIGH && button_state == LOW){
+    //   lock_state = !lock_state;
+    //   digitalWrite(lock_pin, lock_state);
+    // }
+    //-------------
 
     if(analogReading == 0) {
       digitalWrite(lock_pin, LOW);
       
       char* a = "off";
-      char* b = "rpi/broadcast";
+      char* b = "rpi/locker1";
       client.publish(b, a, 0);
+      char* c = "rpi/locker2";
+      client.publish(c, a, 0);
     }
     if(analogReading == 1) {
       digitalWrite(lock_pin, HIGH);
       
       char* a = "on";
-      char* b = "rpi/broadcast";
+      char* o = "off";
+      char* b = "rpi/locker1";
       client.publish(b, a, 0);
-    }    
+      char* c = "rpi/locker2";
+      client.publish(c, a, 0);
+      delay(5000);
+      client.publish(b, o, 0);
+      client.publish(c, o, 0);
+    }
+    
+
 }
