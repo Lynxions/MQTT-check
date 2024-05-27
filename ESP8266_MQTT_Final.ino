@@ -8,9 +8,9 @@
 const char* ssid = "International University";
 const char* password = "";
 
-//const char* mqtt_server = "broker.hivemq.com";
+const char* mqtt_server = "broker.hivemq.com";
 
-const char* mqtt_server = "10.238.55.140"; //IU
+//const char* mqtt_server = "10.238.55.140"; //IU
 
 //const char* mqtt_server = "10.8.99.120"; //IU STAFF
 
@@ -20,7 +20,11 @@ Ticker lock1Ticker;
 Ticker lock2Ticker;
 Ticker lock3Ticker;
 Ticker lock4Ticker;
-Ticker publishOffTicker;
+
+Ticker lock1OffTicker;
+Ticker lock2OffTicker;
+Ticker lock3OffTicker;
+Ticker lock4OffTicker;
 
 // Initializes the espClient
 WiFiClient espClient;
@@ -217,32 +221,28 @@ void setup(){
 
 }
 
-void pubOffTicker(){
-  publishOffTicker.once(5, topicPublishOff); // Set timer for 5 seconds to publish 'off' payload 
+void lock1PublishOff() {
+  char a[] = "rpi/locker1";
+  char f[] = "off";
+  client.publish(a, f, 0);
 }
 
-void topicPublishOff(){
-  char f[] = "off";
-  char a[] = "rpi/locker1";
+void lock2PublishOff() {
   char b[] = "rpi/locker2";
+  char f[] = "off";
+  client.publish(b, f, 0);
+}
+
+void lock3PublishOff() {
   char c[] = "rpi/locker3";
+  char f[] = "off";
+  client.publish(c, f, 0);
+}
+
+void lock4PublishOff() {
   char d[] = "rpi/locker4";
-
-  if (!control_lock1) {
-    client.publish(a, f, 0);
-  }
-
-  if (!control_lock2) {
-    client.publish(b, f, 0);
-  }
-
-  if (!control_lock3) {
-    client.publish(c, f, 0);
-  }
-
-  if (!control_lock4) {
-    client.publish(d, f, 0);
-  }
+  char f[] = "off";
+  client.publish(d, f, 0);
 }
 
 void topicPublishOn(){
@@ -254,29 +254,28 @@ void topicPublishOn(){
 
   if (control_lock1) {
     client.publish(a, o, 0);
-    control_lock1 = false;  
-    pubOffTicker(); 
+    control_lock1 = false;
+    lock1OffTicker.once(5, lock1PublishOff); 
   }
 
   if (control_lock2) {
     client.publish(b, o, 0);
-    control_lock2 = false; 
-    pubOffTicker(); 
+    control_lock2 = false;
+    lock2OffTicker.once(5, lock2PublishOff); 
   }
 
   if (control_lock3) {
     client.publish(c, o, 0);
     control_lock3 = false;
-    pubOffTicker();   
+    lock3OffTicker.once(5, lock3PublishOff); 
   }
 
   if (control_lock4) {
     client.publish(d, o, 0);
-    control_lock4 = false; 
-    pubOffTicker();  
+    control_lock4 = false;
+    lock4OffTicker.once(5, lock4PublishOff); 
   }
 }
-
 
 void loop(){
     if (!client.connected()){
@@ -301,13 +300,13 @@ void loop(){
     if (lockState3 && currentMillis - lock3OnTime >= interval) {
         digitalWrite(lock_pin3, LOW);
         lockState3 = false;
-        Serial.println("Lock 1 is closed after 5 seconds");
+        Serial.println("Lock 3 is closed after 5 seconds");
     }
 
     if (lockState4 && currentMillis - lock4OnTime >= interval) {
         digitalWrite(lock_pin4, LOW);
         lockState4 = false;
-        Serial.println("Lock 2 is closed after 5 seconds");
+        Serial.println("Lock 4 is closed after 5 seconds");
     }
 
     // button
@@ -321,6 +320,4 @@ void loop(){
     //   digitalWrite(lock_pin, lock_state);
     // }
     //-------------
-    
-
 }
