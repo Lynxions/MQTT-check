@@ -2,19 +2,17 @@
 
 ## Overview
 
-This project implements a Smart Locker System using the ESP8266 microcontroller. The system allows remote control of locker locks through MQTT messages and uses an ultrasonic sensor to detect if the locker is occupied. The main features of this system include:
+This project implements a Smart Locker System using the ESP8266 microcontroller. The system allows remote control of locker locks through MQTT (publish and subcribe) messages and uses an ultrasonic sensor to detect if the locker is occupied. The main features of this system include:
 
 - **MQTT Integration**: Remotely control locker locks by subscribing to MQTT topics.
 - **Non-Blocking Execution**: Uses non-blocking techniques to handle multiple tasks efficiently.
-- **Ultrasonic Sensing**: Detects if the locker contains an item and publishes a message if it does.
-- **LED Indicators**: Provides visual feedback for connection statuses and actions.
+- **Ultrasonic Sensing**: Detects if the locker contains an item.
 
 ## Hardware Requirements
 
 - ESP8266 microcontroller
-- 4 locker locks (connected to GPIO pins 5, 14, 4, and 12)
-- HC-SR04 ultrasonic sensor (Trigger pin: GPIO 13, Echo pin: GPIO 15)
-- LEDs for visual feedback
+- 4 locker locks
+- HC-SR04 ultrasonic sensor
 - WiFi connection
 
 ## Software Requirements
@@ -23,17 +21,9 @@ This project implements a Smart Locker System using the ESP8266 microcontroller.
 - PubSubClient library for MQTT
 - Ticker library for non-blocking timing
 
-## Connections
-
-- **Locker Locks**: Connect to GPIO pins 5, 14, 4, and 12.
-- **Ultrasonic Sensor**: 
-  - Trigger pin to GPIO 13
-  - Echo pin to GPIO 15
-- **LED**: Connect to GPIO 2 for status indication.
-
 ## Setup Instructions
 
-1. **Install the Required Libraries**:
+1. **Install the Required Libraries in Arduino IDE**:
    - PubSubClient
    - Ticker
 
