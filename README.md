@@ -51,11 +51,15 @@ This project implements a Smart Locker System using the ESP8266 microcontroller.
 ## Example MQTT Messages
 
 - To open locker 1: 
+```bash
 Topic: rpi/locker1
 Message: on
+```
 - To close locker 1:
+```bash
 Topic: rpi/locker1
 Message: off
+```
 
 ## Troubleshooting
 
